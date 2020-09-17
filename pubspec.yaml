@@ -50,9 +50,14 @@ dependencies:
   page_transition:
   font_awesome_flutter:
   badges:
-  rate_my_app:
   share:
   shimmer:
+  rate_my_app: ^0.6.1+3
+  package_info:
+  firebase_remote_config: ^0.3.1
+  firebase_messaging: ^6.0.15
+  path_provider: 
+  local_auth:
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +76,7 @@ flutter:
 
   assets:
      - assets/
+     - assets/logos/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

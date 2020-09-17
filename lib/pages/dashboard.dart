@@ -1,11 +1,28 @@
+import 'dart:math';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:package_info/package_info.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:rate_my_app/rate_my_app.dart';
 import 'package:share/share.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:world_breaking_news/function/ads.dart';
 import 'package:world_breaking_news/function/appSettings.dart';
 import 'package:world_breaking_news/function/customfun.dart';
 import 'package:world_breaking_news/pages/search/country_search.dart';
+import 'package:world_breaking_news/pages/widgets/contact.dart';
+import 'package:world_breaking_news/pages/widgets/entertainment.dart';
 import 'google_signin.dart/google_func.dart';
+import 'widgets/breaking_news.dart';
+import 'widgets/sport_news.dart';
+import 'widgets/tech.dart';
+
+const playStoreUrl =
+    'https://play.google.com/store/apps/details?id=com.acctgen1.breakingnews';
 
 class MainPage extends StatefulWidget {
   final MyAppSettings myAppSettings;
@@ -18,14 +35,288 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   final MyAppSettings myAppSettings;
   _MainPageState({@required this.myAppSettings});
-  TabController _nestedTabController;
   var _scaffoldKey = GlobalKey<ScaffoldState>();
+  var messtitle;
+  var messbody;
+  var imageurl;
+
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+
+  _register() {
+    _firebaseMessaging.getToken().then((token) => print(token));
+  }
+
+  //creating a function that configure the notification actions
+  void getMessage() {
+    //calling d configure actions
+    _firebaseMessaging.configure(
+        //on message is when the application is in foreground
+        onMessage: (Map<String, dynamic> message) async {
+      //onMessage starts
+      //getting all data sent
+      messtitle = message["data"]["title"];
+      messbody = message["data"]["body"];
+      imageurl = message["data"]["image"];
+      //once the app is opened and notification enters, it should pop up
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                content: ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    ListTile(
+                      //checking if input sent is not null
+                      title: Center(
+                        child: Text(
+                          (messtitle == null ? ' ' : messtitle),
+                          style: GoogleFonts.aBeeZee(
+                              color: Colors.pink[900],
+                              fontSize: 18,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      subtitle: Text(
+                        messbody == null ? ' ' : messbody,
+                        style: GoogleFonts.aBeeZee(fontSize: 14),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Image.network(imageurl == null ? ' ' : imageurl)
+                  ],
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Close'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  )
+                ],
+              ));
+    }, //on message end here
+        onResume: (Map<String, dynamic> message) async {
+      //on resume starts
+      //this called wen app is minimized, it in background
+      //getting all data sent
+      messtitle = message["data"]["title"];
+      messbody = message["data"]["body"];
+      imageurl = message["data"]["image"];
+      // once the notification is clicked, it should pop up
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                content: ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    ListTile(
+                        //checking if input sent is not null
+                        title: Center(
+                          child: Text(
+                            (messtitle == null ? ' ' : messtitle),
+                            style: TextStyle(
+                                color: Colors.blue,
+                                fontSize: 18,
+                                decoration: TextDecoration.underline,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        subtitle: Text(
+                          messbody == null ? ' ' : messbody,
+                          style: TextStyle(fontSize: 14),
+                        )),
+                    Image.network(imageurl == null ? ' ' : imageurl)
+                  ],
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('OK'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  )
+                ],
+              ));
+    }, //on resume end here
+        onLaunch: (Map<String, dynamic> message) async {
+      //on lunch starts here
+      //this called when app is killed
+      //getting all data sent
+      messtitle = message["data"]["title"];
+      messbody = message["data"]["body"];
+      imageurl = message["data"]["image"];
+      //once the notification is clicked, it should pop up
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                content: ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    ListTile(
+                        //checking if input sent is not null
+                        title: Center(
+                          child: Text(
+                            (messtitle == null ? ' ' : messtitle),
+                            style: TextStyle(
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        subtitle: Text(
+                          messbody == null ? ' ' : messbody,
+                          style: TextStyle(fontSize: 14),
+                        )),
+                    Image.network(imageurl == null ? ' ' : imageurl)
+                  ],
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('OK'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  )
+                ],
+              ));
+    } //on launch ends here
+        );
+  }
+
+  void versionCheck() async {
+    //Get Current installed version of app
+    final PackageInfo info = await PackageInfo.fromPlatform();
+    double currentVersion =
+        double.parse(info.version.trim().replaceAll(".", ""));
+
+    //Get Latest version info from firebase config
+    final RemoteConfig remoteConfig = await RemoteConfig.instance;
+    try {
+      // Using default duration to force fetching from remote server.
+
+      await remoteConfig.fetch(); // expiration: const Duration(seconds: 1)
+      await remoteConfig.activateFetched();
+      remoteConfig.getString('force_update_current_version');
+      double newVersion = double.parse(remoteConfig
+          .getString('force_update_current_version')
+          .trim()
+          .replaceAll(".", ""));
+
+      if (newVersion > currentVersion) {
+        _showVersionDialog(context);
+      }
+    } on FetchThrottledException catch (exception) {
+      // Fetch throttled.
+      print('$exception - ****************exception check');
+    } catch (exception) {}
+  }
+
+  _showVersionDialog(context) async {
+    await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        String title = "App Update Alert";
+        String message =
+            "There is a newer version of this app available please update it now and enjoy more news 😍.";
+        String btnLabel = "Update Now";
+        String btnLabelCancel = "Later";
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(btnLabel),
+              onPressed: () => _launchURL(playStoreUrl),
+            ),
+            FlatButton(
+              child: Text(btnLabelCancel),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  RateMyApp _rateMyApp = RateMyApp(
+    preferencesPrefix: 'rateMyApp_',
+    minDays: 12,
+    minLaunches: 2,
+    remindDays: 12,
+    remindLaunches: 6,
+    googlePlayIdentifier: 'com.acctgen1.breakingnews',
+    //appStoreIdentifier: '1517497322',
+  );
+
+  BannerAd myBanner;
+  InterstitialAd myInterstitial;
+
+  BannerAd buildBannerAd() {
+    return BannerAd(
+        adUnitId: BannerAd.testAdUnitId,
+        size: AdSize.banner,
+        listener: (MobileAdEvent event) {
+          if (event == MobileAdEvent.loaded) {
+            myBanner..show();
+          }
+        });
+  }
+
+  BannerAd buildLargeBannerAd() {
+    return BannerAd(
+        adUnitId: BannerAd.testAdUnitId,
+        size: AdSize.largeBanner,
+        listener: (MobileAdEvent event) {
+          if (event == MobileAdEvent.loaded) {
+            myBanner
+              ..show(
+                  anchorType: AnchorType.top,
+                  anchorOffset: MediaQuery.of(context).size.height * 0.15);
+          }
+        });
+  }
+
+  TabController _nestedTabController;
   bool chinternet = true;
   String namei = 'Anonymous', emaili = '', userImg = 'assets/user.png';
 
+  InterstitialAd buildInterstitialAd() {
+    return InterstitialAd(
+      adUnitId: InterstitialAd.testAdUnitId,
+      listener: (MobileAdEvent event) {
+        if (event == MobileAdEvent.failedToLoad) {
+          myInterstitial..load();
+        } else if (event == MobileAdEvent.closed) {
+          myInterstitial = buildInterstitialAd()..load();
+        }
+        print(event);
+      },
+    );
+  }
+
+  void showInterstitialAd() {
+    myInterstitial..show();
+  }
+
+  void showRandomInterstitialAd() {
+    Random r = new Random();
+    bool value = r.nextBool();
+
+    if (value == true) {
+      myInterstitial..show();
+    }
+  }
+
   @override
   void initState() {
-    _nestedTabController = TabController(length: 5, vsync: this);
+    myInterstitial = buildInterstitialAd()..load();
+    FirebaseAdMob.instance.initialize(appId: FirebaseAdMob.testAppId);
+    myBanner = buildBannerAd()..load();
+    _nestedTabController = TabController(length: 4, vsync: this);
     setState(() {
       Future<int> a = CustomFunction().checkInternetConnection();
       a.then((value) {
@@ -41,12 +332,75 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         }
       });
     });
+    versionCheck();
+    _register();
+//getting which action to take by calling the function created above
+    getMessage();
+//getting permission to show notification in iOS
+    _firebaseMessaging.requestNotificationPermissions(
+        const IosNotificationSettings(sound: true, alert: true, badge: true));
+//Storing the permission so as not to ask next time
+    _firebaseMessaging.onIosSettingsRegistered
+        .listen((IosNotificationSettings setting) {});
+    _rateMyApp.init().then((_) {
+      if (_rateMyApp.shouldOpenDialog) {
+        _rateMyApp.showStarRateDialog(
+          context,
+          title: 'Enjoying this app?',
+          message:
+              'If you like this app, please take a little bit of your time to review it !\nIt really helps us and it shouldn\'t take you more than one minute.',
+          actionsBuilder: (context, stars) {
+            return [
+              FlatButton(
+                  onPressed: () async {
+                    launch(playStoreUrl);
+                  },
+                  child: Text('Rate on Play Store',
+                      style: TextStyle(color: Colors.pink[900]))),
+              FlatButton(
+                onPressed: () {
+                  if (stars != null) {
+                    _rateMyApp.save().then((v) => Navigator.pop(context));
+
+                    if (stars <= 2.0) {
+                      _showInSnackBar();
+                    } else if (stars >= 2.1) {
+                      launch(playStoreUrl);
+                    }
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text('Rate', style: TextStyle(color: Colors.pink[900])),
+              ),
+            ];
+          },
+          onDismissed: () =>
+              _rateMyApp.callEvent(RateMyAppEventType.laterButtonPressed),
+          ignoreIOS: false,
+          dialogStyle: DialogStyle(
+            messageStyle: GoogleFonts.openSans(),
+            titleAlign: TextAlign.center,
+            messageAlign: TextAlign.center,
+            messagePadding: EdgeInsets.only(bottom: 20.0),
+          ),
+          starRatingOptions: StarRatingOptions(
+            allowHalfRating: false,
+            starsFillColor: Colors.amber,
+            starsSize: 40,
+            starsBorderColor: Colors.yellow[600],
+          ),
+        );
+      }
+    });
     super.initState();
   }
 
   @override
   void dispose() {
     super.dispose();
+    myInterstitial.dispose();
+    myBanner.dispose();
     _nestedTabController.dispose();
   }
 
@@ -55,8 +409,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: Text('World Breaking News'),
-        //centerTitle: true,
+        title: Text('Breaking News 1o'),
         elevation: 0,
         actions: [
           IconButton(
@@ -65,17 +418,16 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
               showSearch(context: context, delegate: CountrySearch());
             },
           ),
-          // IconButton(
-          //   icon: Icon(Icons.more_vert),
-          //   onPressed: () {},
-          // ),
           IconButton(
             icon: FaIcon(
               FontAwesomeIcons.share,
               size: 25,
             ),
             onPressed: () {
-              Share.share('Kindly download this app and make serious money!!!');
+              Share.share(
+                  'Hi Friend, Kindly download this app, you receive all trending news!!! kindly check it out now $playStoreUrl');
+              // Share.share(
+              //     'Kindly download this app, you receive all trending news!!!');
             },
           ),
         ],
@@ -87,16 +439,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           isScrollable: true,
           tabs: <Widget>[
             Tab(
-              child: Text('Breaking News', style: GoogleFonts.openSans()),
+              child: Text('Top News', style: GoogleFonts.openSans()),
             ),
             Tab(
-              child: Text('Sport', style: GoogleFonts.openSans()),
+              child: Text('Sport News', style: GoogleFonts.openSans()),
             ),
             Tab(
-              child: Text('Entertainment', style: GoogleFonts.openSans()),
-            ),
-            Tab(
-              child: Text('Politics', style: GoogleFonts.openSans()),
+              child: Text('Entertainment News', style: GoogleFonts.openSans()),
             ),
             Tab(
               child: Text('Technology', style: GoogleFonts.openSans()),
@@ -117,45 +466,38 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
               accountEmail: Text("$emaili", style: GoogleFonts.righteous()),
               decoration: BoxDecoration(
                 color: Colors.blue,
-                // image: DecorationImage(
-                //   fit: BoxFit.cover,
-                //   image: AssetImage("image here"),
-                // ),
               ),
             ),
             SizedBox(height: 10),
             ListTile(
               title: Text('Home',
                   style:
-                      GoogleFonts.aBeeZee(fontSize: 17, color: Colors.green)),
-              onTap: () {
-                print('$imageUrl ****');
-                print('$name *****');
-                print('$email  ---');
-                imageUrl == ''
-                    ? print('go to   8**')
-                    : print('don\'t know what is really happening');
-              },
-            ),
-            ListTile(
-              title:
-                  Text('Bookmarks', style: GoogleFonts.aBeeZee(fontSize: 17)),
+                      GoogleFonts.aBeeZee(fontSize: 15, color: Colors.green)),
               onTap: () {},
             ),
-            ListTile(
-              title: Text('Settings', style: GoogleFonts.aBeeZee(fontSize: 17)),
-              onTap: () {
-                signOutGoogle();
-                Navigator.pop(context);
-              },
-            ),
-            Divider(),
+            // ListTile(
+            //   title:
+            //       Text('Bookmarks', style: GoogleFonts.righteous(fontSize: 15)),
+            //   onTap: () {},
+            // ),
+            // ListTile(
+            //   title:
+            //       Text('Settings', style: GoogleFonts.righteous(fontSize: 15)),
+            //   onTap: () {
+            //     signOutGoogle();
+            //     Navigator.pop(context);
+            //   },
+            // ),
+            // Divider(),
             Card(
               color: Colors.blue,
               child: ListTile(
-                title: Text('Continue with google',
-                    style:
-                        GoogleFonts.aBeeZee(fontSize: 17, color: Colors.white)),
+                title: Text('Sign in with Google',
+                    style: GoogleFonts.aBeeZee(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    )),
                 onTap: () {
                   signInWithGoogle().whenComplete(() {
                     setState(() {
@@ -165,34 +507,35 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     });
                   });
                 },
-                trailing: FaIcon(
-                  FontAwesomeIcons.google,
-                  color: Colors.amber,
-                ),
               ),
             ),
             ListTile(
-              title: Text('Watch promotions',
-                  style: GoogleFonts.aBeeZee(fontSize: 17)),
-              onTap: () {},
+              title: Text('Watch Promotions',
+                  style: GoogleFonts.righteous(fontSize: 15)),
+              onTap: () {
+                showInterstitialAd();
+                showRandomInterstitialAd();
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => WatchPromotions()));
+              },
               trailing: FaIcon(
                 FontAwesomeIcons.ad,
                 color: Colors.red,
               ),
             ),
             ListTile(
-              title: Text('Rate Us', style: GoogleFonts.aBeeZee(fontSize: 17)),
-              onTap: () {},
-              trailing: FaIcon(
-                FontAwesomeIcons.star,
-                color: Colors.amber,
-              ),
+              title:
+                  Text('Rate Us', style: GoogleFonts.righteous(fontSize: 15)),
+              onTap: () {
+                launch('$playStoreUrl');
+              },
             ),
             ListTile(
               title: Text('Share with friends',
-                  style: GoogleFonts.aBeeZee(fontSize: 17)),
+                  style: GoogleFonts.righteous(fontSize: 15)),
               onTap: () {
-                Share.share('hello');
+                Share.share(
+                    'Hi Friend, this app is awesome i read every news update i need. kindly check it out now $playStoreUrl');
               },
               trailing: FaIcon(
                 FontAwesomeIcons.share,
@@ -201,10 +544,20 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
             ),
             ListTile(
               title: Text('Contact Developer',
-                  style: GoogleFonts.aBeeZee(fontSize: 17)),
-              onTap: () {},
+                  style: GoogleFonts.righteous(fontSize: 15)),
+              onTap: () {
+                showInterstitialAd();
+                showRandomInterstitialAd();
+                Navigator.of(context).push(
+                  PageTransition(
+                    child: ContactDev(),
+                    type: PageTransitionType.fade,
+                    duration: Duration(milliseconds: 800),
+                  ),
+                );
+              },
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 47),
           ],
         ),
       ),
@@ -212,11 +565,10 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           ? TabBarView(
               controller: _nestedTabController,
               children: <Widget>[
-                Container(color: Colors.red),
-                Container(color: Colors.yellow),
-                Container(color: Colors.green),
-                Container(color: Colors.pink[900]),
-                Container(color: Colors.amber),
+                BreakingNew(),
+                Sportnews(),
+                EntertainmentNews(),
+                TechnologyNews(),
               ],
             )
           : Center(
@@ -266,6 +618,31 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                 ]),
               ),
             )),
+    );
+  }
+
+  void _showInSnackBar() {
+    _scaffoldKey.currentState.showSnackBar(
+      SnackBar(
+        content: GestureDetector(
+          onTap: () {
+            launch('mailto:samuelbeebest@gmail.com');
+          },
+          child: Text(
+            'Kindly Contact Us!',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
+          ),
+        ),
+        duration: (Duration(seconds: 8)),
+        elevation: 10,
+        backgroundColor: Colors.black,
+        action: SnackBarAction(
+            label: 'Contact Us',
+            textColor: Colors.blue,
+            onPressed: () {
+              launch('mailto:samuelbeebest@gmail.com');
+            }),
+      ),
     );
   }
 

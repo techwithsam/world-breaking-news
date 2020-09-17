@@ -6,7 +6,7 @@ import 'package:world_breaking_news/function/locator.dart';
 import 'package:world_breaking_news/pages/dashboard.dart';
 import 'function/appSettings.dart';
 
-//void main() => runApp(MyApp());
+//void main() => runApp(MyApp()); 
 int checked = 0;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,14 +83,12 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-
     myInterstitial = buildInterstitialAd()..load();
   }
 
   @override
   void dispose() {
     myInterstitial.dispose();
-
     super.dispose();
   }
 
@@ -178,7 +176,6 @@ class _BannerAdPageState extends State<BannerAdPage> {
   @override
   void initState() {
     super.initState();
-
     FirebaseAdMob.instance.initialize(appId: FirebaseAdMob.testAppId);
     myBanner = buildBannerAd()..load();
     //myBanner = buildLargeBannerAd()..load();

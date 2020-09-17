@@ -88,8 +88,8 @@ List countryList = [
   'Jordan',
   'Kazakhstan',
   'Kenya',
-  'Kiribati,'
-      'Kuwait',
+  'Kiribati',
+  'Kuwait',
   'Kyrgyzstan',
   'Laos',
   'Latvia',
