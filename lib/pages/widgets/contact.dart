@@ -14,7 +14,7 @@ class _ContactDevState extends State<ContactDev> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Developer'),
+        title: Text('Contact Developer'),
         centerTitle: true,
         elevation: 0,
       ),

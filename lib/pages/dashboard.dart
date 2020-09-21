@@ -9,10 +9,12 @@ import 'package:package_info/package_info.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:rate_my_app/rate_my_app.dart';
 import 'package:share/share.dart';
+import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:world_breaking_news/function/ads.dart';
 import 'package:world_breaking_news/function/appSettings.dart';
 import 'package:world_breaking_news/function/customfun.dart';
+import 'package:world_breaking_news/function/locator.dart';
 import 'package:world_breaking_news/pages/search/country_search.dart';
 import 'package:world_breaking_news/pages/widgets/contact.dart';
 import 'package:world_breaking_news/pages/widgets/entertainment.dart';
@@ -20,6 +22,8 @@ import 'google_signin.dart/google_func.dart';
 import 'widgets/breaking_news.dart';
 import 'widgets/sport_news.dart';
 import 'widgets/tech.dart';
+
+var callFun = locator<CustomFunction>();
 
 const playStoreUrl =
     'https://play.google.com/store/apps/details?id=com.acctgen1.breakingnews';
@@ -113,7 +117,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           child: Text(
                             (messtitle == null ? ' ' : messtitle),
                             style: TextStyle(
-                                color: Colors.blue,
+                                color: Color(0xff0f356d),
                                 fontSize: 18,
                                 decoration: TextDecoration.underline,
                                 fontWeight: FontWeight.bold),
@@ -154,7 +158,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           child: Text(
                             (messtitle == null ? ' ' : messtitle),
                             style: TextStyle(
-                                color: Colors.blue,
+                                color: Color(0xff0f356d),
                                 decoration: TextDecoration.underline,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold),
@@ -280,10 +284,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         });
   }
 
-  TabController _nestedTabController;
-  bool chinternet = true;
-  String namei = 'Anonymous', emaili = '', userImg = 'assets/user.png';
-
   InterstitialAd buildInterstitialAd() {
     return InterstitialAd(
       adUnitId: InterstitialAd.testAdUnitId,
@@ -313,6 +313,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    userinfo();
     myInterstitial = buildInterstitialAd()..load();
     FirebaseAdMob.instance.initialize(appId: FirebaseAdMob.testAppId);
     myBanner = buildBannerAd()..load();
@@ -404,12 +405,19 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     _nestedTabController.dispose();
   }
 
+  TabController _nestedTabController;
+  bool chinternet = true;
+  String namei = 'Anonymous',
+      emaili = '',
+      userImgi =
+          'https://res.cloudinary.com/acctgen1/image/upload/v1600385303/logo_ovivma.jpg';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: Text('Breaking News 1o'),
+        title: Text('Breaking News'),
         elevation: 0,
         actions: [
           IconButton(
@@ -458,14 +466,14 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           children: <Widget>[
             UserAccountsDrawerHeader(
               currentAccountPicture: CircleAvatar(
-                backgroundImage: NetworkImage('$imageUrl'),
+                backgroundImage: NetworkImage('$userImgi'),
                 foregroundColor: Colors.black,
               ),
               accountName:
                   Text("Good day, $namei", style: GoogleFonts.righteous()),
               accountEmail: Text("$emaili", style: GoogleFonts.righteous()),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Color(0xff0f356d),
               ),
             ),
             SizedBox(height: 10),
@@ -489,26 +497,51 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
             //   },
             // ),
             // Divider(),
-            Card(
-              color: Colors.blue,
-              child: ListTile(
-                title: Text('Sign in with Google',
-                    style: GoogleFonts.aBeeZee(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    )),
-                onTap: () {
-                  signInWithGoogle().whenComplete(() {
-                    setState(() {
-                      namei = name;
-                      emaili = email;
-                      userImg = imageUrl;
-                    });
-                  });
-                },
-              ),
-            ),
+
+            emaili == ''
+                ? Card(
+                    color: Color(0xff0f356d),
+                    child: ListTile(
+                      title: Text('Sign in with Google',
+                          style: GoogleFonts.aBeeZee(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          )),
+                      onTap: () {
+                        signInWithGoogle().whenComplete(() {
+                          setState(() {
+                            namei = name;
+                            emaili = email;
+                            userImgi = imageUrl;
+                            // storeDetails();
+                            print('$name **' ' $email ***' ' $imageUrl ****');
+                            callFun.saveStaticInfo(
+                              email: email,
+                              name: name,
+                              imgUrl: imageUrl,
+                            );
+                          });
+                        });
+                      },
+                    ),
+                  )
+                : ListTile(
+                    leading: FaIcon(
+                      FontAwesomeIcons.signOutAlt,
+                      color: Colors.red,
+                    ),
+                    title: Text('Sign Out ',
+                        style: GoogleFonts.righteous(
+                            fontSize: 15, color: Colors.red)),
+                    onTap: () async {
+                      final prefs = await StreamingSharedPreferences.instance;
+                      prefs.clear();
+                      signOutGoogle();
+                      callFun.showToast(message: 'User signed out');
+                      Navigator.pop(context);
+                    },
+                  ),
             ListTile(
               title: Text('Watch Promotions',
                   style: GoogleFonts.righteous(fontSize: 15)),
@@ -516,7 +549,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                 showInterstitialAd();
                 showRandomInterstitialAd();
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => WatchPromotions()));
+                    MaterialPageRoute(builder: (context) => WatchPromotions(myAppSettings: myAppSettings)));
               },
               trailing: FaIcon(
                 FontAwesomeIcons.ad,
@@ -535,11 +568,12 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                   style: GoogleFonts.righteous(fontSize: 15)),
               onTap: () {
                 Share.share(
-                    'Hi Friend, this app is awesome i read every news update i need. kindly check it out now $playStoreUrl');
+                    'Hi Friend, this app is awesome i read every news update i need. kindly check it out now $playStoreUrl.'
+                    'Rate and download');
               },
               trailing: FaIcon(
                 FontAwesomeIcons.share,
-                color: Colors.blue,
+                color: Color(0xff0f356d),
               ),
             ),
             ListTile(
@@ -555,6 +589,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     duration: Duration(milliseconds: 800),
                   ),
                 );
+              },
+            ),
+            ListTile(
+              title: Text('Submit Suggestions',
+                  style: GoogleFonts.righteous(fontSize: 15)),
+              onTap: () {
+                launch('mailto:samuelbeebest@gmail.com');
               },
             ),
             SizedBox(height: 47),
@@ -621,6 +662,29 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     );
   }
 
+  Future<void> userinfo() async {
+    final prefs = await StreamingSharedPreferences.instance;
+    var details = MyAppSettings(prefs);
+    setState(() {
+      namei = details.dname.getValue();
+      emaili = details.demail.getValue();
+      userImgi = details.dimageUrl.getValue();
+      print('$name ***************** '
+          ' $email ******************'
+          ' $userImgi **************8');
+    });
+  }
+
+  // storeDetails({String email, name, img}) async {
+  //   final prefs = await StreamingSharedPreferences.instance;
+  //   prefs.setString('name', name);
+  //   prefs.setString('email', email);
+  //   prefs.setString('imageUrl', img);
+  //   print('$name ***************** '
+  //       ' $email ******************'
+  //       ' $img **************8');
+  // }
+
   void _showInSnackBar() {
     _scaffoldKey.currentState.showSnackBar(
       SnackBar(
@@ -638,7 +702,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         backgroundColor: Colors.black,
         action: SnackBarAction(
             label: 'Contact Us',
-            textColor: Colors.blue,
+            textColor: Color(0xff0f356d),
             onPressed: () {
               launch('mailto:samuelbeebest@gmail.com');
             }),

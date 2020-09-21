@@ -13,7 +13,7 @@ class CountrySearch extends SearchDelegate<String> {
     'India',
     'France',
   ];
-  
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
@@ -21,7 +21,7 @@ class CountrySearch extends SearchDelegate<String> {
           icon: Icon(
             Icons.search,
             size: 25,
-            color: Colors.blue,
+            color: Color(0xff0f356d),
           ),
           onPressed: () {
             showResults(context);
@@ -95,7 +95,7 @@ class CountrySearch extends SearchDelegate<String> {
               text: TextSpan(
                   text: buildSuggestion[index].substring(0, query.length),
                   style: TextStyle(
-                      color: Colors.teal, fontWeight: FontWeight.bold),
+                      color: Colors.blue[900], fontWeight: FontWeight.bold),
                   children: [
                 TextSpan(
                   text: buildSuggestion[index].substring(query.length),

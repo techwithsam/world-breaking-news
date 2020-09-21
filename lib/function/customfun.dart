@@ -20,12 +20,9 @@ class CustomFunction {
     prefs.setString('name', name);
     prefs.setString('email', email);
     prefs.setString('imageUrl', imgUrl);
-  }
-
-  String replaceCharAt({String oldString, int index, String newChar}) {
-    return oldString.substring(0, index) +
-        newChar +
-        oldString.substring(index + 1);
+    print('$name - name ^****'
+        ' $email - email *********'
+        ' $imgUrl - imageurl ***************');
   }
 
   Future<int> checkInternetConnection() async {

@@ -7,6 +7,6 @@ class MyAppSettings {
         dimageUrl = preferences.getString('imageUrl', defaultValue: '');
 
   final Preference<String> dname;
-  final Preference<String> demail;
+  final Preference<String> demail; 
   final Preference<String> dimageUrl;
 }

@@ -1,3 +1,7 @@
+// Developer - Samuel Adekunle(acctgen1)
+// Start Date - error 404*
+// Launch Date - Monday 21th, Sept, 2020.
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_admob/firebase_admob.dart';
@@ -6,7 +10,7 @@ import 'package:world_breaking_news/function/locator.dart';
 import 'package:world_breaking_news/pages/dashboard.dart';
 import 'function/appSettings.dart';
 
-//void main() => runApp(MyApp()); 
+//void main() => runApp(MyApp());
 int checked = 0;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,9 +37,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'World Breaking News - every news platform in one app.',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        primaryColor: Colors.blue[700],
-        accentColor: Colors.blue[900],
+        primaryColor: Color(0xff0f356d),
+        accentColor: Color(0xff0f356d),
       ),
       home: MainPage(
         myAppSettings: settings,

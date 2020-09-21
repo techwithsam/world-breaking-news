@@ -193,7 +193,7 @@ class _WebView1State extends State<WebView> {
                   hidden: true,
                   initialChild: Container(
                     child: Center(
-                      child: SpinKitThreeBounce(color: Colors.blue[900]),
+                      child: SpinKitThreeBounce(color: Color(0xff0f356d)),
                     ),
                   ),
                 ),
