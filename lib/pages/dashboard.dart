@@ -4,6 +4,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info/package_info.dart';
 import 'package:page_transition/page_transition.dart';
@@ -18,6 +19,7 @@ import 'package:world_breaking_news/function/locator.dart';
 import 'package:world_breaking_news/pages/search/country_search.dart';
 import 'package:world_breaking_news/pages/widgets/contact.dart';
 import 'package:world_breaking_news/pages/widgets/entertainment.dart';
+import '../ad_manager.dart';
 import 'google_signin.dart/google_func.dart';
 import 'widgets/breaking_news.dart';
 import 'widgets/sport_news.dart';
@@ -39,12 +41,14 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   final MyAppSettings myAppSettings;
   _MainPageState({@required this.myAppSettings});
+
   var _scaffoldKey = GlobalKey<ScaffoldState>();
   var messtitle;
   var messbody;
   var imageurl;
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  final ams = AdManager();
 
   _register() {
     _firebaseMessaging.getToken().then((token) => print(token));
@@ -261,32 +265,35 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   BannerAd buildBannerAd() {
     return BannerAd(
-        adUnitId: BannerAd.testAdUnitId,
-        size: AdSize.banner,
+        // adUnitId: BannerAd.testAdUnitId,
+        adUnitId: 'ca-app-pub-4759407370315106/2763568679',
+        size: AdSize.smartBanner,
         listener: (MobileAdEvent event) {
           if (event == MobileAdEvent.loaded) {
-            myBanner..show();
+            myBanner..show(anchorType: AnchorType.bottom);
           }
         });
   }
 
-  BannerAd buildLargeBannerAd() {
-    return BannerAd(
-        adUnitId: BannerAd.testAdUnitId,
-        size: AdSize.largeBanner,
-        listener: (MobileAdEvent event) {
-          if (event == MobileAdEvent.loaded) {
-            myBanner
-              ..show(
-                  anchorType: AnchorType.top,
-                  anchorOffset: MediaQuery.of(context).size.height * 0.15);
-          }
-        });
-  }
+  // BannerAd buildLargeBannerAd() {
+  //   return BannerAd(
+  //       // adUnitId: BannerAd.testAdUnitId,
+  //       adUnitId: 'ca-app-pub-4759407370315106/2763568679',
+  //       size: AdSize.largeBanner,
+  //       listener: (MobileAdEvent event) {
+  //         if (event == MobileAdEvent.loaded) {
+  //           myBanner
+  //             ..show(
+  //                 anchorType: AnchorType.bottom,
+  //                 anchorOffset: MediaQuery.of(context).size.height * 0.15);
+  //         }
+  //       });
+  // }
 
   InterstitialAd buildInterstitialAd() {
     return InterstitialAd(
-      adUnitId: InterstitialAd.testAdUnitId,
+      // adUnitId: InterstitialAd.testAdUnitId,
+      adUnitId: 'ca-app-pub-4759407370315106/2297391163',
       listener: (MobileAdEvent event) {
         if (event == MobileAdEvent.failedToLoad) {
           myInterstitial..load();
@@ -313,9 +320,12 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    super.initState();
     userinfo();
+    Admob.initialize();
     myInterstitial = buildInterstitialAd()..load();
-    FirebaseAdMob.instance.initialize(appId: FirebaseAdMob.testAppId);
+    FirebaseAdMob.instance
+        .initialize(appId: 'ca-app-pub-4759407370315106~5115126190');
     myBanner = buildBannerAd()..load();
     _nestedTabController = TabController(length: 4, vsync: this);
     setState(() {
@@ -335,12 +345,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     });
     versionCheck();
     _register();
-//getting which action to take by calling the function created above
     getMessage();
-//getting permission to show notification in iOS
     _firebaseMessaging.requestNotificationPermissions(
         const IosNotificationSettings(sound: true, alert: true, badge: true));
-//Storing the permission so as not to ask next time
     _firebaseMessaging.onIosSettingsRegistered
         .listen((IosNotificationSettings setting) {});
     _rateMyApp.init().then((_) {
@@ -394,7 +401,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         );
       }
     });
-    super.initState();
   }
 
   @override
@@ -415,251 +421,206 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: Text('Breaking News'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {
-              showSearch(context: context, delegate: CountrySearch());
-            },
-          ),
-          IconButton(
-            icon: FaIcon(
-              FontAwesomeIcons.share,
-              size: 25,
+        key: _scaffoldKey,
+        appBar: AppBar(
+          title: Text('Breaking News'),
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                showSearch(context: context, delegate: CountrySearch());
+              },
             ),
-            onPressed: () {
-              Share.share(
-                  'Hi Friend, Kindly download this app, you receive all trending news!!! kindly check it out now $playStoreUrl');
-              // Share.share(
-              //     'Kindly download this app, you receive all trending news!!!');
-            },
-          ),
-        ],
-        bottom: TabBar(
-          controller: _nestedTabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.black,
-          isScrollable: true,
-          tabs: <Widget>[
-            Tab(
-              child: Text('Top News', style: GoogleFonts.openSans()),
-            ),
-            Tab(
-              child: Text('Sport News', style: GoogleFonts.openSans()),
-            ),
-            Tab(
-              child: Text('Entertainment News', style: GoogleFonts.openSans()),
-            ),
-            Tab(
-              child: Text('Technology', style: GoogleFonts.openSans()),
+            IconButton(
+              icon: FaIcon(
+                FontAwesomeIcons.share,
+                size: 25,
+              ),
+              onPressed: () {
+                Share.share(
+                    'Hi Friend, Kindly download this app, you receive all trending news!!! kindly check it out now $playStoreUrl');
+                // Share.share(
+                //     'Kindly download this app, you receive all trending news!!!');
+              },
             ),
           ],
+          bottom: TabBar(
+            controller: _nestedTabController,
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.black,
+            isScrollable: true,
+            tabs: <Widget>[
+              Tab(
+                child: Text('Top News', style: GoogleFonts.openSans()),
+              ),
+              Tab(
+                child: Text('Sport News', style: GoogleFonts.openSans()),
+              ),
+              Tab(
+                child:
+                    Text('Entertainment News', style: GoogleFonts.openSans()),
+              ),
+              Tab(
+                child: Text('Technology', style: GoogleFonts.openSans()),
+              ),
+            ],
+          ),
         ),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          children: <Widget>[
-            UserAccountsDrawerHeader(
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: NetworkImage('$userImgi'),
-                foregroundColor: Colors.black,
+        drawer: Drawer(
+          child: ListView(
+            children: <Widget>[
+              UserAccountsDrawerHeader(
+                currentAccountPicture: CircleAvatar(
+                  backgroundImage: NetworkImage('$userImgi'),
+                  foregroundColor: Colors.black,
+                ),
+                accountName:
+                    Text("Good day, $namei", style: GoogleFonts.righteous()),
+                accountEmail: Text("$emaili", style: GoogleFonts.righteous()),
+                decoration: BoxDecoration(
+                  color: Color(0xff0f356d),
+                ),
               ),
-              accountName:
-                  Text("Good day, $namei", style: GoogleFonts.righteous()),
-              accountEmail: Text("$emaili", style: GoogleFonts.righteous()),
-              decoration: BoxDecoration(
-                color: Color(0xff0f356d),
+              SizedBox(height: 10),
+              ListTile(
+                title: Text('Home',
+                    style:
+                        GoogleFonts.aBeeZee(fontSize: 15, color: Colors.green)),
+                onTap: () {},
               ),
-            ),
-            SizedBox(height: 10),
-            ListTile(
-              title: Text('Home',
-                  style:
-                      GoogleFonts.aBeeZee(fontSize: 15, color: Colors.green)),
-              onTap: () {},
-            ),
-            // ListTile(
-            //   title:
-            //       Text('Bookmarks', style: GoogleFonts.righteous(fontSize: 15)),
-            //   onTap: () {},
-            // ),
-            // ListTile(
-            //   title:
-            //       Text('Settings', style: GoogleFonts.righteous(fontSize: 15)),
-            //   onTap: () {
-            //     signOutGoogle();
-            //     Navigator.pop(context);
-            //   },
-            // ),
-            // Divider(),
+              // ListTile(
+              //   title:
+              //       Text('Bookmarks', style: GoogleFonts.righteous(fontSize: 15)),
+              //   onTap: () {},
+              // ),
+              // ListTile(
+              //   title:
+              //       Text('Settings', style: GoogleFonts.righteous(fontSize: 15)),
+              //   onTap: () {
+              //     signOutGoogle();
+              //     Navigator.pop(context);
+              //   },
+              // ),
+              // Divider(),
 
-            emaili == ''
-                ? Card(
-                    color: Color(0xff0f356d),
-                    child: ListTile(
-                      title: Text('Sign in with Google',
-                          style: GoogleFonts.aBeeZee(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          )),
-                      onTap: () {
-                        signInWithGoogle().whenComplete(() {
-                          setState(() {
-                            namei = name;
-                            emaili = email;
-                            userImgi = imageUrl;
-                            // storeDetails();
-                            print('$name **' ' $email ***' ' $imageUrl ****');
-                            callFun.saveStaticInfo(
-                              email: email,
-                              name: name,
-                              imgUrl: imageUrl,
-                            );
+              emaili == ''
+                  ? Card(
+                      color: Color(0xff0f356d),
+                      child: ListTile(
+                        title: Text('Sign in with Google',
+                            style: GoogleFonts.aBeeZee(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            )),
+                        onTap: () {
+                          signInWithGoogle().whenComplete(() {
+                            setState(() {
+                              namei = name;
+                              emaili = email;
+                              userImgi = imageUrl;
+                              // storeDetails();
+                              print('$name **' ' $email ***' ' $imageUrl ****');
+                              callFun.saveStaticInfo(
+                                email: email,
+                                name: name,
+                                imgUrl: imageUrl,
+                              );
+                            });
                           });
-                        });
+                        },
+                      ),
+                    )
+                  : ListTile(
+                      leading: FaIcon(
+                        FontAwesomeIcons.signOutAlt,
+                        color: Colors.red,
+                      ),
+                      title: Text('Sign Out ',
+                          style: GoogleFonts.righteous(
+                              fontSize: 15, color: Colors.red)),
+                      onTap: () async {
+                        final prefs = await StreamingSharedPreferences.instance;
+                        prefs.clear();
+                        signOutGoogle();
+                        callFun.showToast(message: 'User signed out');
+                        Navigator.pop(context);
                       },
                     ),
-                  )
-                : ListTile(
-                    leading: FaIcon(
-                      FontAwesomeIcons.signOutAlt,
-                      color: Colors.red,
-                    ),
-                    title: Text('Sign Out ',
-                        style: GoogleFonts.righteous(
-                            fontSize: 15, color: Colors.red)),
-                    onTap: () async {
-                      final prefs = await StreamingSharedPreferences.instance;
-                      prefs.clear();
-                      signOutGoogle();
-                      callFun.showToast(message: 'User signed out');
-                      Navigator.pop(context);
-                    },
-                  ),
-            ListTile(
-              title: Text('Watch Promotions',
-                  style: GoogleFonts.righteous(fontSize: 15)),
-              onTap: () {
-                showInterstitialAd();
-                showRandomInterstitialAd();
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => WatchPromotions(myAppSettings: myAppSettings)));
-              },
-              trailing: FaIcon(
-                FontAwesomeIcons.ad,
-                color: Colors.red,
-              ),
-            ),
-            ListTile(
-              title:
-                  Text('Rate Us', style: GoogleFonts.righteous(fontSize: 15)),
-              onTap: () {
-                launch('$playStoreUrl');
-              },
-            ),
-            ListTile(
-              title: Text('Share with friends',
-                  style: GoogleFonts.righteous(fontSize: 15)),
-              onTap: () {
-                Share.share(
-                    'Hi Friend, this app is awesome i read every news update i need. kindly check it out now $playStoreUrl.'
-                    'Rate and download');
-              },
-              trailing: FaIcon(
-                FontAwesomeIcons.share,
-                color: Color(0xff0f356d),
-              ),
-            ),
-            ListTile(
-              title: Text('Contact Developer',
-                  style: GoogleFonts.righteous(fontSize: 15)),
-              onTap: () {
-                showInterstitialAd();
-                showRandomInterstitialAd();
-                Navigator.of(context).push(
-                  PageTransition(
-                    child: ContactDev(),
-                    type: PageTransitionType.fade,
-                    duration: Duration(milliseconds: 800),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              title: Text('Submit Suggestions',
-                  style: GoogleFonts.righteous(fontSize: 15)),
-              onTap: () {
-                launch('mailto:samuelbeebest@gmail.com');
-              },
-            ),
-            SizedBox(height: 47),
-          ],
-        ),
-      ),
-      body: (chinternet
-          ? TabBarView(
-              controller: _nestedTabController,
-              children: <Widget>[
-                BreakingNew(),
-                Sportnews(),
-                EntertainmentNews(),
-                TechnologyNews(),
-              ],
-            )
-          : Center(
-              child: Container(
-                height: 160,
-                width: 280,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(10),
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                    topRight: Radius.circular(10),
-                  ),
+              ListTile(
+                title: Text('Watch Promotions',
+                    style: GoogleFonts.righteous(fontSize: 15)),
+                onTap: () {
+                  // showInterstitialAd();
+                  // showRandomInterstitialAd();
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              WatchPromotions(myAppSettings: myAppSettings)));
+                },
+                trailing: FaIcon(
+                  FontAwesomeIcons.ad,
+                  color: Colors.red,
                 ),
-                child: Column(children: <Widget>[
-                  SizedBox(height: 4),
-                  Icon(
-                    Icons.signal_wifi_off,
-                    size: 40,
-                    color: Colors.red,
-                  ),
-                  SizedBox(height: 16),
-                  Text('No Internet connection Please retry.',
-                      style: GoogleFonts.openSans(
-                        fontStyle: FontStyle.italic,
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      )),
-                  SizedBox(height: 22),
-                  MaterialButton(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                    ),
-                    onPressed: () {
-                      retry();
-                    },
-                    //height: 50,
-                    child: Text(
-                      'Retry'.toUpperCase(),
-                    ),
-                    color: Colors.teal,
-                    textColor: Colors.white,
-                  ),
-                ]),
               ),
-            )),
-    );
+              ListTile(
+                title:
+                    Text('Rate Us', style: GoogleFonts.righteous(fontSize: 15)),
+                onTap: () {
+                  launch('$playStoreUrl');
+                },
+              ),
+              ListTile(
+                title: Text('Share with friends',
+                    style: GoogleFonts.righteous(fontSize: 15)),
+                onTap: () {
+                  Share.share(
+                      'Hi Friend, this app is awesome i read every news update i need. kindly check it out now $playStoreUrl.'
+                      'Rate and download');
+                },
+                trailing: FaIcon(
+                  FontAwesomeIcons.share,
+                  color: Color(0xff0f356d),
+                ),
+              ),
+              ListTile(
+                title: Text('Contact Developer',
+                    style: GoogleFonts.righteous(fontSize: 15)),
+                onTap: () {
+                  // showInterstitialAd();
+                  // showRandomInterstitialAd();
+                  Navigator.of(context).push(
+                    PageTransition(
+                      child: ContactDev(),
+                      type: PageTransitionType.fade,
+                      duration: Duration(milliseconds: 800),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                title: Text('Submit Suggestions',
+                    style: GoogleFonts.righteous(fontSize: 15)),
+                onTap: () {
+                  launch('mailto:samuelbeebest@gmail.com');
+                },
+              ),
+              SizedBox(height: 47),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          controller: _nestedTabController,
+          children: <Widget>[
+            BreakingNew(), 
+            Sportnews(),
+            EntertainmentNews(),
+            TechnologyNews(),
+          ],
+        ));
   }
 
   Future<void> userinfo() async {
@@ -719,3 +680,54 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                 )));
   }
 }
+
+
+/*
+Center(
+              child: Container(
+                height: 160,
+                width: 280,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.black,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                  ),
+                ),
+                child: Column(children: <Widget>[
+                  SizedBox(height: 4),
+                  Icon(
+                    Icons.signal_wifi_off,
+                    size: 40,
+                    color: Colors.red,
+                  ),
+                  SizedBox(height: 16),
+                  Text('No Internet connection Please retry.',
+                      style: GoogleFonts.openSans(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      )),
+                  SizedBox(height: 22),
+                  MaterialButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                    ),
+                    onPressed: () {
+                      retry();
+                    },
+                    //height: 50,
+                    child: Text(
+                      'Retry'.toUpperCase(),
+                    ),
+                    color: Colors.teal,
+                    textColor: Colors.white,
+                  ),
+                ]),
+              ),
+            )
+*/

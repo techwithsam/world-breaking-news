@@ -44,39 +44,48 @@ class _WebViewState extends State<WebView> {
     return SafeArea(
         child: (!internet
             ? Scaffold(
-                body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      'No Internet Connection, Please retry.',
-                      style: GoogleFonts.aBeeZee(
-                          fontStyle: FontStyle.italic,
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(50.0),
-                      child: MaterialButton(
-                        elevation: 6.0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(55.0)),
-                        ),
-                        onPressed: () {
-                          retry();
-                        },
-                        minWidth: double.infinity,
-                        height: 50,
-                        child: Text(
-                          'Retry'.toUpperCase(),
-                        ),
-                        color: Colors.redAccent,
-                        textColor: Colors.white,
-                      ),
-                    ),
-                  ],
+                appBar: AppBar(
+                  title: Text(
+                    '$title',
+                    style: GoogleFonts.righteous(),
+                  ),
+                  centerTitle: true,
+                  elevation: 0,
                 ),
-              ))
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        'No Internet Connection, Please retry.',
+                        style: GoogleFonts.aBeeZee(
+                            fontStyle: FontStyle.italic,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(30),
+                        child: MaterialButton(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(55.0)),
+                          ),
+                          onPressed: () {
+                            retry();
+                          },
+                          minWidth: double.infinity,
+                          height: 50,
+                          child: Text(
+                            'Retry'.toUpperCase(),
+                          ),
+                          color: Colors.blue[900],
+                          textColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ))
             : SafeArea(
                 child: WebviewScaffold(
                   appBar: AppBar(
@@ -207,4 +216,3 @@ class _WebView1State extends State<WebView> {
             builder: (context) => WebView1(selectedUrl: selectedUrl)));
   }
 }
- 

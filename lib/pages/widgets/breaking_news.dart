@@ -1,5 +1,7 @@
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../ad_manager.dart';
 import '../web.dart';
 
 class BreakingNew extends StatefulWidget {
@@ -10,6 +12,7 @@ class BreakingNew extends StatefulWidget {
 }
 
 class _BreakingNewState extends State<BreakingNew> {
+  final ams = AdManager();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,6 +20,10 @@ class _BreakingNewState extends State<BreakingNew> {
       body: SingleChildScrollView(
           child: Column(
         children: <Widget>[
+          AdmobBanner(
+            adUnitId: ams.bannerAdUnitId(),
+            adSize: AdmobBannerSize.FULL_BANNER,
+          ),
           SizedBox(height: 10),
           Center(
             child: Text(

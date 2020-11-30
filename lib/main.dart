@@ -3,6 +3,7 @@
 // Launch Date - Monday 21th, Sept, 2020.
 
 import 'dart:math';
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
@@ -11,9 +12,10 @@ import 'package:world_breaking_news/pages/dashboard.dart';
 import 'function/appSettings.dart';
 
 //void main() => runApp(MyApp());
-int checked = 0;
+int checked = 0; // WidgetsFlutterBinding.ensureInitialized();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Admob.initialize();
   final preferences = await StreamingSharedPreferences.instance;
   final settings = MyAppSettings(preferences);
 
